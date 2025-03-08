@@ -375,6 +375,16 @@
                 return; // Stop the function if the rating is invalid
             }
 
+            // Rate limiting: Check if the user has already submitted a rating recently
+            const lastSubmissionTime = localStorage.getItem(`lastSubmissionTime_${driver}`);
+            const currentTime = new Date().getTime();
+            const timeLimit = 60000; // 1 minute (in milliseconds)
+
+            if (lastSubmissionTime && (currentTime - lastSubmissionTime < timeLimit)) {
+                alert("You can only submit one rating per minute. Please wait and try again.");
+                return; // Stop the function if the user is submitting too quickly
+            }
+
             // Overwrite the previous rating for this driver
             ratings[driver] = [rating]; // Reset the array with the new rating
 
@@ -386,6 +396,9 @@
                     timestamp: new Date()
                 });
                 console.log("Rating saved to Firestore!");
+
+                // Update the last submission time in local storage
+                localStorage.setItem(`lastSubmissionTime_${driver}`, currentTime);
             } catch (error) {
                 console.error("Error saving rating: ", error);
             }
