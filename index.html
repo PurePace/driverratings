@@ -260,19 +260,25 @@
     </div>
 
     <script type="module">
+        // Import Firebase and Firestore
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDFUmOJ3TzsJqwVDN1ALff5PkJn_KaV11s",
+            authDomain: "driver-ratings-27660.firebaseapp.com",
+            projectId: "driver-ratings-27660",
+            storageBucket: "driver-ratings-27660.firebasestorage.app",
+            messagingSenderId: "629385855961",
+            appId: "1:629385855961:web:eb23da0348f7df36c84fc8",
+            measurementId: "G-1L5JE75BM5"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+
+        // Initialize Firestore
         const db = getFirestore(app);
 
         // Define the list of drivers
@@ -334,6 +340,33 @@
             `;
             driversList.appendChild(driverDiv);
         });
+
+        // Function to fetch and display ratings in real-time
+        function setupRealTimeUpdates() {
+            onSnapshot(collection(db, "ratings"), (querySnapshot) => {
+                const ratings = {};
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const driverName = data.driverName;
+                    const rating = data.rating;
+
+                    if (!ratings[driverName]) {
+                        ratings[driverName] = [];
+                    }
+                    ratings[driverName].push(rating);
+                });
+
+                // Calculate and display average ratings
+                Object.keys(ratings).forEach((driver) => {
+                    const avgRating = (ratings[driver].reduce((a, b) => a + b, 0) / ratings[driver].length).toFixed(1);
+                    document.getElementById(`avg-${driver}`).innerText = `Average Rating: ${avgRating}`;
+                });
+            });
+        }
+
+        // Call the function when the page loads
+        window.onload = setupRealTimeUpdates;
 
         window.submitRating = async (driver, rating) => {
             // Overwrite the previous rating for this driver
