@@ -25,7 +25,7 @@
         h1 {
             font-size: 48px;
             margin: 0;
-            color: #f39c12; /* Reverted to original color */
+            color: #f39c12;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
@@ -218,8 +218,8 @@
         }
 
         .social-icon img {
-            width: 32px; /* Adjust size as needed */
-            height: 32px; /* Adjust size as needed */
+            width: 32px;
+            height: 32px;
             transition: transform 0.3s ease;
         }
 
@@ -240,7 +240,7 @@
         <a href="https://www.instagram.com/purepace_/" target="_blank" class="social-icon">
             <img src="social/insta.png" alt="Instagram">
         </a>
-		<a href="https://x.com/PacePure" target="_blank" class="social-icon">
+        <a href="https://x.com/PacePure" target="_blank" class="social-icon">
             <img src="social/x.png" alt="Twitter">
         </a>
     </div>
@@ -255,27 +255,24 @@
     </div>
 
     <script type="module">
-			// Import the functions you need from the SDKs you need
-			import { initializeApp } from "firebase/app";
-			import { getAnalytics } from "firebase/analytics";
-			// TODO: Add SDKs for Firebase products that you want to use
-			// https://firebase.google.com/docs/web/setup#available-libraries
+        // Import Firebase and Firestore
+        import { initializeApp } from "firebase/app";
+        import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
 
-			// Your web app's Firebase configuration
-			// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-			const firebaseConfig = {
-			  apiKey: "AIzaSyDFUmOJ3TzsJqwVDN1ALff5PkJn_KaV11s",
-			  authDomain: "driver-ratings-27660.firebaseapp.com",
-			  projectId: "driver-ratings-27660",
-			  storageBucket: "driver-ratings-27660.firebasestorage.app",
-			  messagingSenderId: "629385855961",
-			  appId: "1:629385855961:web:eb23da0348f7df36c84fc8",
-			  measurementId: "G-1L5JE75BM5"
-			};
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDFUmOJ3TzsJqwVDN1ALff5PkJn_KaV11s",
+            authDomain: "driver-ratings-27660.firebaseapp.com",
+            projectId: "driver-ratings-27660",
+            storageBucket: "driver-ratings-27660.appspot.com",
+            messagingSenderId: "629385855961",
+            appId: "1:629385855961:web:eb23da0348f7df36c84fc8",
+            measurementId: "G-1L5JE75BM5"
+        };
 
-			// Initialize Firebase
-			const app = initializeApp(firebaseConfig);
-			const analytics = getAnalytics(app);
+        // Initialize Firebase and Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
         // Define the list of drivers
         const drivers = [
@@ -313,6 +310,7 @@
         let ratings = {};
         const driversList = document.getElementById("driversList");
 
+        // Render drivers
         drivers.forEach(driver => {
             ratings[driver] = [];
             const driverDiv = document.createElement("div");
@@ -337,12 +335,14 @@
             driversList.appendChild(driverDiv);
         });
 
+        // Submit rating for a driver
         window.submitRating = async (driver, rating) => {
             ratings[driver].push(rating);
             const avgRating = (ratings[driver].reduce((a, b) => a + b, 0) / ratings[driver].length).toFixed(1);
             document.getElementById(`avg-${driver}`).innerText = `Average Rating: ${avgRating}`;
         };
 
+        // Select Driver of the Day
         window.selectDriverOfTheDay = (driver) => {
             if (selectedDriverOfTheDay) {
                 // Deselect the previously selected driver
@@ -362,17 +362,62 @@
             alert(`${driver} selected as Driver of the Day!`);
         };
 
-        window.submitFinalVote = () => {
+        // Submit final vote
+        window.submitFinalVote = async () => {
             if (!selectedDriverOfTheDay) {
                 alert("Please select a Driver of the Day before submitting.");
                 return;
             }
-            document.getElementById("driver-of-the-day").innerHTML = `
-                <h2>Driver of the Day</h2>
-                <img src="${driverImages[selectedDriverOfTheDay]}" alt="${selectedDriverOfTheDay}">
-                <p>${selectedDriverOfTheDay}</p>
-            `;
-            document.getElementById("driver-of-the-day").style.display = "block";
+
+            // Prepare vote data
+            const voteData = {
+                driverOfTheDay: selectedDriverOfTheDay,
+                ratings: ratings,
+                timestamp: new Date()
+            };
+
+            try {
+                // Add vote data to Firestore
+                const docRef = await addDoc(collection(db, "votes"), voteData);
+                console.log("Vote submitted with ID: ", docRef.id);
+
+                // Fetch all votes to calculate percentages
+                const votesSnapshot = await getDocs(collection(db, "votes"));
+                const allVotes = votesSnapshot.docs.map(doc => doc.data());
+
+                // Calculate total votes and votes for the selected Driver of the Day
+                const totalVotes = allVotes.length;
+                const driverVotes = allVotes.filter(vote => vote.driverOfTheDay === selectedDriverOfTheDay).length;
+                const percentage = ((driverVotes / totalVotes) * 100).toFixed(2);
+
+                // Display the "Vote successfully submitted" message
+                const successMessage = document.createElement("div");
+                successMessage.innerText = "Vote successfully submitted!";
+                successMessage.style.color = "#8a2be2";
+                successMessage.style.fontSize = "20px";
+                successMessage.style.marginTop = "20px";
+                document.querySelector(".container").appendChild(successMessage);
+
+                // Display the Driver of the Day and percentage
+                const resultDiv = document.createElement("div");
+                resultDiv.id = "vote-results";
+                resultDiv.innerHTML = `
+                    <h2>Driver of the Day</h2>
+                    <img src="${driverImages[selectedDriverOfTheDay]}" alt="${selectedDriverOfTheDay}">
+                    <p>${selectedDriverOfTheDay}</p>
+                    <p>Percentage of Votes: ${percentage}%</p>
+                `;
+                resultDiv.style.marginTop = "20px";
+                resultDiv.style.padding = "20px";
+                resultDiv.style.background = "rgba(51, 51, 51, 0.8)";
+                resultDiv.style.borderRadius = "15px";
+                resultDiv.style.border = "1px solid #8a2be2";
+                resultDiv.style.boxShadow = "0 0 10px #8a2be2, 0 0 20px #8a2be2";
+                document.querySelector(".container").appendChild(resultDiv);
+            } catch (error) {
+                console.error("Error submitting vote: ", error);
+                alert("An error occurred while submitting your vote. Please try again.");
+            }
         };
     </script>
 </body>
