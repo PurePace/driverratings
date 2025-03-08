@@ -269,7 +269,7 @@
             apiKey: "AIzaSyDFUmOJ3TzsJqwVDN1ALff5PkJn_KaV11s",
             authDomain: "driver-ratings-27660.firebaseapp.com",
             projectId: "driver-ratings-27660",
-            storageBucket: "driver-ratings-27660.firebasestorage.app",
+            storageBucket: "driver-ratings-27660.appspot.com",
             messagingSenderId: "629385855961",
             appId: "1:629385855961:web:eb23da0348f7df36c84fc8",
             measurementId: "G-1L5JE75BM5"
@@ -369,6 +369,12 @@
         window.onload = setupRealTimeUpdates;
 
         window.submitRating = async (driver, rating) => {
+            // Validate the rating
+            if (rating < 1 || rating > 10 || isNaN(rating)) {
+                alert("Please enter a valid rating between 1 and 10.");
+                return; // Stop the function if the rating is invalid
+            }
+
             // Overwrite the previous rating for this driver
             ratings[driver] = [rating]; // Reset the array with the new rating
 
