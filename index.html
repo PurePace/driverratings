@@ -256,22 +256,24 @@
 
     <script type="module">
         // Import Firebase and Firestore
-        import { initializeApp } from "firebase/app";
-        import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDFUmOJ3TzsJqwVDN1ALff5PkJn_KaV11s",
             authDomain: "driver-ratings-27660.firebaseapp.com",
             projectId: "driver-ratings-27660",
-            storageBucket: "driver-ratings-27660.appspot.com",
+            storageBucket: "driver-ratings-27660.firebasestorage.app",
             messagingSenderId: "629385855961",
             appId: "1:629385855961:web:eb23da0348f7df36c84fc8",
             measurementId: "G-1L5JE75BM5"
         };
 
-        // Initialize Firebase and Firestore
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+
+        // Initialize Firestore
         const db = getFirestore(app);
 
         // Define the list of drivers
